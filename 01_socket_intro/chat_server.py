@@ -1,0 +1,34 @@
+import socket
+
+
+# Define constants to be used
+HOST_IP = socket.gethostbyname(socket.gethostname())
+HOST_PORT_NO = 12345
+ENCODER = "utf-8"
+BYTE_SIZE = 1024
+
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Your ip address
+print(socket.gethostname())
+print(socket.gethostbyname(socket.gethostname()))  # ip of given hostname
+
+# Bind our new socket to a tuple (Ip address & port address)
+server_socket.bind((HOST_IP, HOST_PORT_NO))
+
+
+# put socket in listening mode
+server_socket.listen()
+
+
+# Accept any incoming connection and inform them
+print("Server is running .... \n")
+
+# accepet any single connection & store two pieces of info
+client_socket, client_address = server_socket.accept()
+print(type(client_socket))
+print(type(client_address))
+print(client_socket)
+print(client_address)
+
+client_socket.send("server: You are connected ...\n".encode(ENCODER))
