@@ -26,3 +26,7 @@ while True:
 
     # send a message to connected client, we cant send string to client should be coded
     client_socket.send("You are connected".encode("utf-8"))
+
+    # close the connection
+    server_socket.close()
+    break
