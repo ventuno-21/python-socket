@@ -8,7 +8,12 @@ client_socket.connect((socket.gethostbyname(socket.gethostname()), 12345))
 
 
 # Receive a  message form server side, max number of bytes should be specefied which will be received
-message = client_socket.recv(1024)
+message = client_socket.recv(10)
+message = message.decode("utf-8")
+print(f"client receive message : {message}")
+print(type(message))
+
+message = client_socket.recv(10)
 message = message.decode("utf-8")
 print(f"client receive message : {message}")
 print(type(message))
