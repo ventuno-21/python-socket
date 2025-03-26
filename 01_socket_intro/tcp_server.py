@@ -25,7 +25,7 @@ while True:
     print(f"connected to client add: {client_address}")
 
     # send a message to connected client, we cant send string to client should be coded
-    client_socket.send("You are connected".encode("utf-8"))
+    client_socket.send("server: You are connected".encode("utf-8"))
 
     # close the connection
     server_socket.close()
