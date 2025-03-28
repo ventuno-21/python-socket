@@ -26,10 +26,10 @@ print("Server is running & listening .... \n")
 
 # accepet any single connection & store two pieces of info
 client_socket, client_address = server_socket.accept()
-print(type(client_socket))
-print(type(client_address))
-print(client_socket)
-print(client_address)
+print(f"client_socket type = {type(client_socket)}")
+print(f"client_address type = {type(client_address)}")
+print(f"client_socket = {client_socket}")
+print(f"client_address = {client_address}")
 
 client_socket.send("server: You are connected ...\n".encode(ENCODER))
 
@@ -42,7 +42,7 @@ while True:
     # quite if client socket wants to quit, otherwise show messages
     if message == "quit":
         client_socket.send("quit".encode(ENCODER))
-        print("\n server: Ending the chat .. bye")
+        print("\n server: ending the chat .. bye")
         break
     else:
         print(f"\n {message}")

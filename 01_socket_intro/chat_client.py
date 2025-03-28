@@ -16,10 +16,11 @@ client_socket.connect((DEST_IP, DEST_PORT_NO))
 while True:
     # receive info from server
     message = client_socket.recv(BYTE_SIZE).decode(ENCODER)
+
     # Quit if the connected server wants to quit, else keep sending messages
     if message == "quit":
         client_socket.send("quit".encode(ENCODER))
-        print("\n client: Enging the chat .. bye")
+        print("\n client: ending the chat .. bye")
         break
     else:
         print(f"\n{message}")
