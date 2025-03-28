@@ -31,6 +31,32 @@ def recive_message(client_socket):
     pass
 
 
-def connect_client()
-    '''Connecting an incoming client to the server'''
-    pass
+def connect_client():
+    """Connecting an incoming client to the server"""
+    while True:
+        # accept any inoming cline connection
+        client_socket, client_address = server_socket.accept()
+        print(f"client_socket type = {type(client_socket)}")
+        print(f"client_address type = {type(client_address)}")
+        print(f"client_socket = {client_socket}")
+        print(f"client_address = {client_address}")
+
+        # send a Name flag to prompt the client for their name
+        client_socket.send("NAME".encode(ENCODER))
+        client_name = client_socket.recv(BYTE_SIZE).decode(ENCODER)
+
+        # Add new client socket and name to appropriate lists
+        client_socket_list.append(client_socket)
+        client_name_list.append(client_name)
+
+        # Update the server, individual client and all clients
+        print(f"Name of new client is: {client_name}\n")  # server
+        client_socket.send(
+            f"{client_name}, you have connected to the server".encode(ENCODER)
+        )  # individual client
+        # inform other clients that new client is joined to chatroom
+        broadcat_message(f"{client_name} has joined to chatroom".encode(ENCODER))
+
+
+# start the server
+print(f"Server is listining for incoming connections ... \n")
