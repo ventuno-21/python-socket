@@ -21,7 +21,7 @@ client_socket_list = []
 client_name_list = []
 
 
-def broadcat_message(message):
+def broadcast_message(message):
     """Sending a message to all clients that are connected to the server"""
     for client_socket in client_socket_list:
         client_socket.send(message)
@@ -30,16 +30,22 @@ def broadcat_message(message):
 def recive_message(client_socket):
     """Receiving an incoming message from a specific client & forward the message to be broadcast"""
     while True:
-        # Get the name of given client
-        index = client_socket_list.index(client_socket)
-        name = client_name_list[index]
+
         try:
+            # Get the name of given client
+            index = client_socket_list.index(client_socket)
+            name = client_name_list[index]
+
             # receive messafe from the client
             message = client_socket.recv(BYTE_SIZE).decode(ENCODER)
-            message = f"{name}: {message}".encode(ENCODER)
-            broadcat_message(message)
+            message = f"\033[1;92m\t{name}: {message}\033[0m".encode(ENCODER)
+            broadcast_message(message)
 
         except:
+            # Get the name of given client
+            index = client_socket_list.index(client_socket)
+            name = client_name_list[index]
+
             # Remobe the client_socket and name from lists
             client_socket_list.remove(client_socket)
             client_name_list.remove(name)
@@ -48,7 +54,9 @@ def recive_message(client_socket):
             client_socket.close()
 
             # Broadcating to othe clients that specific client has left the chatroom
-            broadcat_message(f"{name} has left the chat!".encode(ENCODER))
+            broadcast_message(
+                f"\033[5;91m\t{name} has left the chat!\033[0m".encode(ENCODER)
+            )
             break
 
 
@@ -76,7 +84,7 @@ def connect_client():
             f"{client_name}, you have connected to the server".encode(ENCODER)
         )  # individual client
         # inform other clients that new client is joined to chatroom
-        broadcat_message(f"{client_name} has joined to chatroom".encode(ENCODER))
+        broadcast_message(f"{client_name} has joined to chatroom".encode(ENCODER))
 
         # Now that a new client has connected, start a thread
         recieve_thread = threading.Thread(target=recive_message, args=(client_socket,))

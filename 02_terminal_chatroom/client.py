@@ -50,5 +50,5 @@ send_thread = threading.Thread(target=send_message)
 recieve_thread.start()
 send_thread.start()
 
-recieve_thread.join()
-send_thread.join()
+# recieve_thread.join()
+# send_thread.join()
