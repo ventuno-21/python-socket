@@ -23,12 +23,33 @@ client_name_list = []
 
 def broadcat_message(message):
     """Sending a message to all clients that are connected to the server"""
-    pass
+    for client_socket in client_socket_list:
+        client_socket.send(message)
 
 
 def recive_message(client_socket):
     """Receiving an incoming message from a specific client & forward the message to be broadcast"""
-    pass
+    while True:
+        # Get the name of given client
+        index = client_socket_list.index(client_socket)
+        name = client_name_list[index]
+        try:
+            # receive messafe from the client
+            message = client_socket.recv(BYTE_SIZE).decode(ENCODER)
+            message = f"{name}: {message}".encode(ENCODER)
+            broadcat_message(message)
+
+        except:
+            # Remobe the client_socket and name from lists
+            client_socket_list.remove(client_socket)
+            client_name_list.remove(name)
+
+            # close the client_socket connection
+            client_socket.close()
+
+            # Broadcating to othe clients that specific client has left the chatroom
+            broadcat_message(f"{name} has left the chat!".encode(ENCODER))
+            break
 
 
 def connect_client():
@@ -57,6 +78,11 @@ def connect_client():
         # inform other clients that new client is joined to chatroom
         broadcat_message(f"{client_name} has joined to chatroom".encode(ENCODER))
 
+        # Now that a new client has connected, start a thread
+        recieve_thread = threading.Thread(target=recive_message, args=(client_socket,))
+        recieve_thread.start()
+
 
 # start the server
-print(f"Server is listining for incoming connections ... \n")
+print(f"Server is listening for incoming connections ... \n")
+connect_client()

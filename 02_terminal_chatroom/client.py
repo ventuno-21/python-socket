@@ -15,19 +15,21 @@ client_socket.connect((DEST_IP, DEST_PORT_NO))
 
 def send_message():
     """send a message to the server to be broadcast"""
-    pass
+    while True:
+        message = input("")
+        client_socket.send(message.encode(ENCODER))
 
 
-def recive_message():
+def recieve_message():
     """Receiving an incoming message from server"""
     while True:
         try:
             # receive an incoming message from server
             message = client_socket.recv(BYTE_SIZE).decode(ENCODER)
 
-            # check for the name flag, else show the message
+            # check for the "NAME" flag, else show the message
             if message == "NAME":
-                name = input("What is your name?")
+                name = input("What is your name ?")
                 client_socket.send(name.encode(ENCODER))
             else:
                 print(message)
@@ -38,5 +40,15 @@ def recive_message():
             break
 
 
-# Start the client
-recive_message()
+# # Start the client
+# recieve_message()
+
+# creating threads to continously send & receive messages
+recieve_thread = threading.Thread(target=recieve_message)
+send_thread = threading.Thread(target=send_message)
+
+recieve_thread.start()
+send_thread.start()
+
+recieve_thread.join()
+send_thread.join()
