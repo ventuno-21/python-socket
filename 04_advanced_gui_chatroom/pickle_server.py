@@ -43,3 +43,4 @@ while True:
 
     # close the socket
     server_socket.close()
+    break
