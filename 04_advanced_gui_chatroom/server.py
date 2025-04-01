@@ -22,7 +22,69 @@ blue = "#98AB59"
 purple = "#9c51b6"
 root.config(bg=black)
 
+
+# create connection class to hold server socket
+class Connection:
+    """A class to store a connection,  server socket and pertinent info"""
+
+    def __init__(self):
+        pass
+
+
 # Define functions
+def start_server(connection):
+    """start the server on a given port"""
+    pass
+
+
+def close_server(connection):
+    """Begin the process to close the server"""
+    pass
+
+
+def connect_client(connection):
+    """connect an incoming clietn to server"""
+    pass
+
+
+def create_message(flag, name, message, color):
+    """Return a message packet to be sent"""
+    pass
+
+
+def process_message(connection, message_json, client_socket, client_address=(0, 0)):
+    """Update server info based on a message packet flag"""
+    pass
+
+
+def broadcast_message(connection, message_json):
+    """Send a message to all client sockets connected to the server"""
+    pass
+
+
+def receive_message(connection, client_socket):
+    """Recieve an incoming message from a client"""
+    pass
+
+
+def self_broadcast(connection):
+    """Broadcast a special admin message to all clients"""
+    pass
+
+
+def private_message(connection):
+    """send a pivate messafe to a single client"""
+    pass
+
+
+def kick_client(coonection):
+    """kick out the given client"""
+    pass
+
+
+def ban_client(coonection):
+    """Ban a given client based on their IP address"""
+    pass
 
 
 #  Define gui layout
@@ -99,13 +161,69 @@ history_scrollbar.grid(row=0, column=1, sticky="NS")
 
 
 # client_frame layout ==========================================================
+client_scrollbar = tkinter.Scrollbar(client_frame, orient=VERTICAL)
+client_listbox = tkinter.Listbox(
+    client_frame,
+    height=10,
+    width=55,
+    borderwidth=3,
+    font=my_font,
+    bg=black,
+    fg=light_green,
+    yscrollcommand=client_scrollbar.set,
+)
+client_scrollbar.config(command=client_listbox.yview)
 
+client_listbox.grid(row=0, column=0)
+client_scrollbar.grid(row=0, column=1, sticky="NS")
 
 # message_frame layout =========================================================
+input_entry = tkinter.Entry(message_frame, width=40, borderwidth=1, font=my_font)
+self_broadcast_button = tkinter.Button(
+    message_frame,
+    text="Broadcast",
+    width=13,
+    borderwidth=5,
+    font=my_font,
+    bg=light_green,
+    state=DISABLED,
+)
 
+input_entry.grid(row=0, column=0, padx=5, pady=5)
+self_broadcast_button.grid(row=0, column=1, padx=5, pady=5)
 
 # admin_frame layout ===========================================================
+message_button = tkinter.Button(
+    admin_frame,
+    text="PM",
+    borderwidth=5,
+    width=15,
+    font=my_font,
+    bg=light_green,
+    state=DISABLED,
+)
+kick_button = tkinter.Button(
+    admin_frame,
+    text="Kick",
+    borderwidth=5,
+    width=15,
+    font=my_font,
+    bg=light_green,
+    state=DISABLED,
+)
+ban_button = tkinter.Button(
+    admin_frame,
+    text="Ban",
+    borderwidth=5,
+    width=15,
+    font=my_font,
+    bg=light_green,
+    state=DISABLED,
+)
 
+message_button.grid(row=0, column=0, padx=5, pady=5)
+kick_button.grid(row=0, column=1, padx=5, pady=5)
+ban_button.grid(row=0, column=2, padx=5, pady=5)
 
 # Run the root window's mainloop()
 root.mainloop()
