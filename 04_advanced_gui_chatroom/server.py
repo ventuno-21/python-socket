@@ -25,7 +25,7 @@ root.config(bg=black)
 
 # create connection class to hold server socket
 class Connection:
-    """A class to store a connection,  server socket and pertinent info"""
+    """A class to store a connection,  a server socket and pertinent info"""
 
     def __init__(self):
         pass

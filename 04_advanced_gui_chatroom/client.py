@@ -27,8 +27,16 @@ BYTESIZE = 1024
 global client_socket
 
 
+# create connection class to hold client socket
+class Connection:
+    """A class to store a connection,  a client socket and pertinent info"""
+
+    def __init__(self):
+        pass
+
+
 # Define Functions
-def connect():
+def connect(connection):
     """Connect to a server at a given ip/port address"""
     pass
     # global client_socket
@@ -97,8 +105,8 @@ def verify_connection(name):
     #     client_socket.close()
 
 
-def disconnect():
-    """Disconnect from the server"""
+def disconnect(connection):
+    """Disconnect client from the server"""
     pass
 
     # global client_socket
@@ -116,7 +124,27 @@ def disconnect():
     # port_entry.config(state=NORMAL)
 
 
-def send_message():
+def gui_start():
+    """Officially start connection by updating GUI"""
+    pass
+
+
+def gui_start():
+    """Officially end connection by updating GUI"""
+    pass
+
+
+def create_message(flag, name, message, color):
+    """Return a message packet to be sent"""
+    pass
+
+
+def process_message(connection, message_json):
+    """Update the client based on message packet flag"""
+    pass
+
+
+def send_message(connection):
     """Send a message to the server to be broadcast"""
     pass
     # global client_socket
@@ -129,7 +157,7 @@ def send_message():
     # input_entry.delete(0, END)
 
 
-def recieve_message():
+def recieve_message(connection):
     """Recieve an incoming message from the server"""
     pass
     # global client_socket
