@@ -83,7 +83,7 @@ def connect_client(connection):
                     "You have been banned...bye",
                     light_green,
                 )
-                # because our message to client is in dictionary, first we have to change the format to 'string
+                # because our message to the client is in dictionary format, first we have to change the format to 'string'
                 message_json = json.dumps(message_packet)
                 client_socket.send(message_json.encode(connection.encoder))
 
@@ -120,15 +120,61 @@ def create_message(flag, name, message, color):
 
 def process_message(connection, message_json, client_socket, client_address=(0, 0)):
     """Update server info based on a message packet flag"""
-    pass
+    # decode & turn to dictionary the message that we received from client by json.loads()
+    message_packet = json.loads(message_json)
+    name = message_packet["name"]
+    flag = message_packet["flag"]
+    message = message_packet["message"]
+    color = message_packet["color"]
+
+    if flag == "INFO":
+        # Add the new client information to the appropriate lists
+        connection.client_sockets.append(client_socket)
+        # client_address is a tuple with two items, first item is 'ip_address', 2nd one the 'port'
+        connection.client_ips.append(client_address[0])
+
+        # Broadcast the new client joining and update GUI
+        message_packet = create_message(
+            "MESSAGE",
+            "Admin (broadcast)",
+            f"{name} has joined the server!!!",
+            light_green,
+        )
+        # convert dictionary to 'string', because we cant send a dictionary
+        message_json = json.dumps(message_packet)
+        broadcast_message(connection, message_json.encode(connection.encoder))
+
+        # Update server UI at the end of listbox
+        client_listbox.insert(END, f"Name: {name}   IP Addr: {client_address[0]}")
+
+        # Now that a client has been established, start a thread to recieve messages
+        recieve_thread = threading.Thread(
+            target=recieve_message,
+            args=(
+                connection,
+                client_socket,
+            ),
+        )
+        recieve_thread.start()
+
+    elif flag == "MESSAGE":
+        pass
+
+    elif flag == "DISCONNECT":
+        pass
+
+    else:
+        # Catch for errors..
+        history_listbox.insert(0, "Error processing message...")
 
 
 def broadcast_message(connection, message_json):
     """Send a message to all client sockets connected to the server"""
-    pass
+    for client_socket in connection.client_sockets:
+        client_socket.send(message_json)
 
 
-def receive_message(connection, client_socket):
+def recieve_message(connection, client_socket):
     """Recieve an incoming message from a client"""
     pass
 
