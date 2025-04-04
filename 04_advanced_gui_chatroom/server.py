@@ -1,4 +1,4 @@
-import tkinter
+import tkinter, socket, threading, json
 from datetime import datetime
 from tkinter import DISABLED, VERTICAL, END, NORMAL, StringVar, VERTICAL
 
@@ -28,13 +28,40 @@ class Connection:
     """A class to store a connection,  a server socket and pertinent info"""
 
     def __init__(self):
-        pass
+        self.host_ip = socket.gethostbyname(socket.gethostname())
+        self.encoder = "utf-8"
+        self.bytesize = 1024
+
+        self.client_sockets = []
+        self.client_ips = []
+        self.banned_ips = []
 
 
-# Define functions
+# Define functions ==============================================================
 def start_server(connection):
     """start the server on a given port"""
-    pass
+    # Get the port number to run the serrver & attach to the connection object
+    connection.port = int(port_entry.get())
+
+    # Create server socket, then bind it and then start listening
+    connection.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    connection.server_socket.bind((connection.host_ip, connection.port))
+    connection.server_socket.listen()
+
+    # Update GUI
+    history_listbox.delete(0, END)  # Clear from index 0 to the last indez
+    history_listbox.insert(0, f"Server started on port: {connection.port}.")
+    end_button.config(state=NORMAL)
+    self_broadcast_button.config(state=NORMAL)
+    message_button.config(state=NORMAL)
+    kick_button.config(state=NORMAL)
+    ban_button.config(state=NORMAL)
+    start_button.config(state=DISABLED)
+
+    # Create a thread to continously listen for connections
+    # Because we want to have more than one connection at a same time, so we use threading
+    connect_thread = threading.Thread(target=connect_client, args=(connection,))
+    connect_thread.start()
 
 
 def close_server(connection):
@@ -44,12 +71,51 @@ def close_server(connection):
 
 def connect_client(connection):
     """connect an incoming clietn to server"""
-    pass
+    while True:
+        try:
+            client_socket, client_address = connection.server_socket.accept()
+            # Check to see if the IP of the client is banned.
+            # client address is a 'tuple' & first item in this tuple is client ip_address
+            if client_address[0] in connection.banned_ips:
+                message_packet = create_message(
+                    "DISCONNECT",
+                    "Admin (private)",
+                    "You have been banned...bye",
+                    light_green,
+                )
+                # because our message to client is in dictionary, first we have to change the format to 'string
+                message_json = json.dumps(message_packet)
+                client_socket.send(message_json.encode(connection.encoder))
+
+                # Clost the client socket
+                client_socket.close()
+            else:
+                # Send a message pakcet to recieve client info
+                message_packet = create_message(
+                    "INFO", "Admin (private)", "Please send your name", light_green
+                )
+                # because our message to client is in dictionary, first we have to change the format to 'string
+                # Therefore we use json.dumps() to convert it to 'string' and then encode it
+                message_json = json.dumps(message_packet)
+                client_socket.send(message_json.encode(connection.encoder))
+
+                # Wait for confimration message to be sent verifiying the connection
+                message_json = client_socket.recv(connection.bytesize)
+                process_message(connection, message_json, client_socket, client_address)
+        except:
+            break
 
 
 def create_message(flag, name, message, color):
-    """Return a message packet to be sent"""
-    pass
+    """Return a message packet to be sent (in dictionary)"""
+    message_packet = {
+        "flag": flag,
+        "name": name,
+        "message": message,
+        "color": color,
+    }
+
+    return message_packet
 
 
 def process_message(connection, message_json, client_socket, client_address=(0, 0)):
@@ -125,6 +191,7 @@ start_button = tkinter.Button(
     width=15,
     font=my_font,
     bg=light_green,
+    command=lambda: start_server(my_connection),
 )
 end_button = tkinter.Button(
     connection_frame,
@@ -225,5 +292,6 @@ message_button.grid(row=0, column=0, padx=5, pady=5)
 kick_button.grid(row=0, column=1, padx=5, pady=5)
 ban_button.grid(row=0, column=2, padx=5, pady=5)
 
-# Run the root window's mainloop()
+# create an object of Connection class & then Run the root window's mainloop()
+my_connection = Connection()
 root.mainloop()
