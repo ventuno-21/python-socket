@@ -1,11 +1,11 @@
 # Client Side GUI Chat Room
-import tkinter, socket, threading
+import tkinter, socket, threading, json
 from tkinter import DISABLED, VERTICAL, END, NORMAL, StringVar
 
 # Define window
 root = tkinter.Tk()
 root.title("Chat Client")
-root.iconbitmap(r"03_basic_gui_chatroom\talk.ico")
+# root.iconbitmap(r"03_basic_gui_chatroom\talk.ico")
 root.geometry("600x600")
 root.resizable(0, 0)
 
@@ -32,37 +32,32 @@ class Connection:
     """A class to store a connection,  a client socket and pertinent info"""
 
     def __init__(self):
-        pass
+        self.encoder = "utf-8"
+        self.bytesize = 1024
 
 
 # Define Functions
 def connect(connection):
     """Connect to a server at a given ip/port address"""
-    pass
-    # global client_socket
+    # Clear any previous chats from index 0 to the last one which is 'END'
+    my_listbox.delete(0, END)
 
-    # # Clear any previous chats
-    # my_listbox.delete(0, END)
+    # Get required info for connection from input fields
+    connection.name = name_entry.get()
+    connection.target_ip = ip_entry.get()
+    connection.port = port_entry.get()
+    connection.color = text_color.get()
 
-    # # Get the required connection information
-    # name = name_entry.get()
-    # ip = ip_entry.get()
-    # port = port_entry.get()
+    try:
+        # Create a client socket
+        connection.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        connection.client_socket.connect((connection.target_ip, int(connection.port)))
 
-    # # Only try to make a connection if all three fields are filled in
-    # if name and ip and port:
-    #     # Conditions for connection are met, try for connection
-    #     my_listbox.insert(0, f"{name} is waiting to connect to {ip} at {port}...")
-
-    #     # Create a client socket to connect to the server
-    #     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #     client_socket.connect((ip, int(port)))
-
-    #     # Verify that the connection is valid
-    #     verify_connection(name)
-    # else:
-    #     # Conditions for connection were not met
-    #     my_listbox.insert(0, "Insufficient information for connection...")
+        # Recieve an incoming message packet from the server
+        message_json = connection.client_socket.recv(connection.bytesize)
+        process_message(connection, message_json)
+    except:
+        my_listbox.insert(0, "Connection not established...Bye.")
 
 
 def verify_connection(name):
@@ -107,71 +102,121 @@ def verify_connection(name):
 
 def disconnect(connection):
     """Disconnect client from the server"""
-    pass
+    # Create a message packet to be sent
+    message_packet = create_message(
+        "DISCONNECT", connection.name, "I am leaving.", connection.color
+    )
+    message_json = json.dumps(message_packet)
+    connection.client_socket.send(message_json.encode(connection.encoder))
 
-    # global client_socket
-
-    # # Close the socket
-    # client_socket.close()
-
-    # # Change button/entry states
-    # connect_button.config(state=NORMAL)
-    # disconnect_button.config(state=DISABLED)
-    # send_button.config(state=DISABLED)
-
-    # name_entry.config(state=NORMAL)
-    # ip_entry.config(state=NORMAL)
-    # port_entry.config(state=NORMAL)
+    # Disable GUI for chat
+    gui_end()
 
 
 def gui_start():
-    """Officially start connection by updating GUI"""
-    pass
+    """Officially start connection by updating GUI/ enable/disable buttones"""
+    connect_button.config(state=DISABLED)
+    disconnect_button.config(state=NORMAL)
+    send_button.config(state=NORMAL)
+    name_entry.config(state=DISABLED)
+    ip_entry.config(state=DISABLED)
+    port_entry.config(state=DISABLED)
+
+    for button in color_buttons:
+        button.config(state=DISABLED)
 
 
-def gui_start():
+def gui_end():
     """Officially end connection by updating GUI"""
-    pass
+    connect_button.config(state=NORMAL)
+    disconnect_button.config(state=DISABLED)
+    send_button.config(state=DISABLED)
+    name_entry.config(state=NORMAL)
+    ip_entry.config(state=NORMAL)
+    port_entry.config(state=NORMAL)
+
+    for button in color_buttons:
+        button.config(state=NORMAL)
 
 
 def create_message(flag, name, message, color):
     """Return a message packet to be sent"""
-    pass
+    message_packet = {
+        "flag": flag,
+        "name": name,
+        "message": message,
+        "color": color,
+    }
+    return message_packet
 
 
 def process_message(connection, message_json):
     """Update the client based on message packet flag"""
     pass
+    # Update the chat history first by unpacking the json message.
+    message_packet = json.loads(message_json)  # decode and turn to dict in one step!
+    flag = message_packet["flag"]
+    name = message_packet["name"]
+    message = message_packet["message"]
+    color = message_packet["color"]
+
+    if flag == "INFO":
+        # Server is asking for information to verify connection.  Send the info.
+        message_packet = create_message(
+            "INFO", connection.name, "Joins the server!", connection.color
+        )
+        message_json = json.dumps(message_packet)
+        connection.client_socket.send(message_json.encode(connection.encoder))
+
+        # Enable GUI for chat
+        gui_start()
+
+        # Create a thread to coninousuly recieve messages from the server
+        recieve_thread = threading.Thread(target=recieve_message, args=(connection,))
+        recieve_thread.start()
+
+    elif flag == "MESSAGE":
+        # Server has sent a message so display it
+        my_listbox.insert(0, f"{name}: {message}")
+        my_listbox.itemconfig(0, fg=color)
+
+    elif flag == "DISCONNECT":
+        # Server is asking you to leave (kicked/banned by server )
+        my_listbox.insert(0, f"{name}: {message}")
+        my_listbox.itemconfig(0, fg=color)
+        disconnect(connection)
+
+    else:
+        # Catch for errors...
+        my_listbox.insert(0, "Error processing message...")
 
 
 def send_message(connection):
     """Send a message to the server to be broadcast"""
-    pass
-    # global client_socket
+    # Send the message to the server
+    message_packet = create_message(
+        "MESSAGE", connection.name, input_entry.get(), connection.color
+    )
+    # convert dictionary to 'string' so be able to send it to server
+    message_json = json.dumps(message_packet)
+    connection.client_socket.send(message_json.encode(connection.encoder))
 
-    # # Send the message to the server
-    # message = input_entry.get()
-    # client_socket.send(message.encode(ENCODER))
-
-    # # Clear the input entry
-    # input_entry.delete(0, END)
+    # Clear the input entry from index 0 to last index which in 'END'
+    input_entry.delete(0, END)
 
 
 def recieve_message(connection):
     """Recieve an incoming message from the server"""
-    pass
-    # global client_socket
-    #
-    # while True:
-    #     try:
-    #         # Recivee an incoming message from the server
-    #         message = client_socket.recv(BYTESIZE).decode(ENCODER)
-    #         my_listbox.insert(0, f"s: {message}")
-    #     except:
-    #         # An error occured, disconnect from the server
-    #         my_listbox.insert(0, "Closing the connection. Bye...")
-    #         disconnect()
-    #         break
+    while True:
+        # Recive an incoming message packet from the server
+        try:
+            # Recive an incoming message packet
+            message_json = connection.client_socket.recv(connection.bytesize)
+            process_message(connection, message_json)
+        except:
+            # Cannot recive message, close the connection and break
+            my_listbox.insert(0, "Connection has been closed...Bye.")
+            break
 
 
 # Define GUI Layout
@@ -206,7 +251,8 @@ connect_button = tkinter.Button(
     bg=light_green,
     borderwidth=5,
     width=10,
-    command=connect,
+    # command=connect,
+    command=lambda: connect(my_connection),
 )
 disconnect_button = tkinter.Button(
     info_frame,
@@ -216,7 +262,8 @@ disconnect_button = tkinter.Button(
     borderwidth=5,
     width=10,
     state=DISABLED,
-    command=disconnect,
+    # command=disconnect,
+    command=lambda: disconnect(my_connection),
 )
 
 name_label.grid(row=0, column=0, padx=2, pady=10)
@@ -305,10 +352,12 @@ send_button = tkinter.Button(
     font=my_font,
     bg=light_green,
     state=DISABLED,
-    command=send_message,
+    command=lambda: send_message(my_connection),
+    # command=send_message,
 )
 input_entry.grid(row=0, column=0, padx=5)
 send_button.grid(row=0, column=1, padx=5)
 
-# Run the root window's mainloop()
+# create an object of Connection class & Run the root window's mainloop()
+my_connection = Connection()
 root.mainloop()
